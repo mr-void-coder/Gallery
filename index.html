@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> The King  - Royal Gallery</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<style>
+    :root { --gold: #D4AF37; --black: #0A0A0A; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Montserrat'; background: var(--black); color: var(--gold); padding: 15px; max-width: 900px; margin: auto; }
+    .royal-card { background: #111; padding: 25px; border-radius: 15px; border: 2px solid var(--gold); margin-bottom: 20px; }
+    h1 { font-family: 'Cinzel'; text-align: center; font-size: 28px; margin: 10px 0; }
+    .crown-main { font-size: 50px; text-align: center; }
+    input, button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 8px; border: 1px solid var(--gold); background: #222; color: white; font-size: 14px; }
+    button { background: var(--gold); color: var(--black); font-weight: 700; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .hidden { display: none; }
+    .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
+    .gallery-item { position: relative; border: 2px solid var(--gold); border-radius: 8px; overflow: hidden; }
+    .gallery-item img { width: 100%; height: 150px; object-fit: cover; display: block; }
+    .gallery-item .link-box { background: #222; padding: 8px; font-size: 10px; word-break: break-all; }
+    .copy-btn { background: #004400; color: #00FF00; padding: 5px; font-size: 11px; margin-top: 5px; }
+    .status-msg { text-align: center; font-size: 12px; color: #00FF00; margin: 10px 0; }
+    .note { font-size: 11px; color: #B8941F; text-align: center; margin-top: 5px; }
+    .stats { text-align: center; font-size: 14px; margin: 10px 0; color: #B8941F; }
+</style>
+</head>
+<body>
+
+<div class="royal-card">
+    <div class="crown-main">👑</div>
+    <h1>KING IO AKAI GALLERY</h1>
+    <p style="text-align:center; font-size:11px;">ROYAL IMAGE VAULT • EST. 2026</p>
+    <div class="stats">Total Images: <span id="imageCount">0</span> 📸</div>
+    <div class="status-msg" id="statusMsg">Firebase Storage: CONNECTED ✅</div>
+
+    <label style="font-size:12px; color:#B8941F;">Upload Picha Mpya:</label>
+    <input type="file" id="imageUpload" accept="image/*" multiple>
+    <input type="text" id="imageTitle" placeholder="Title ya Picha - Optional" maxlength="50">
+    <button id="uploadBtn" onclick="uploadImages()">📤 UPLOAD TO EMPIRE VAULT</button>
+    <p class="note">Unaweza upload picha nyingi mara moja. Link itatoka automatically.</p>
+</div>
+
+<div class="royal-card">
+    <h1>ROYAL GALLERY</h1>
+    <div class="gallery" id="galleryGrid"></div>
+</div>
+
+<script>
+  // TUMIA FIREBASE YAKO ILE ILE YA TSE KAMA UNATAKA
+  // AMA CREATE PROJECT MPYA KWA firebase.google.com
+  const firebaseConfig = {
+    apiKey: "AIzaSyAmXKbyLJmf2IU1hS8RI0uAE5LWgkAvovI",
+    authDomain: "single-empire.firebaseapp.com",
+    databaseURL: "https://single-empire-default-rtdb.firebaseio.com",
+    projectId: "single-empire",
+    storageBucket: "single-empire.firebasestorage.app",
+    messagingSenderId: "719163390473",
+    appId: "1:719163390473:web:857798e381fb16456616d8"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const storage = firebase.storage();
+  const db = firebase.database();
+
+  window.addEventListener('load', () => {
+    loadGallery();
+  });
+
+  function uploadImages() {
+    const files = document.getElementById('imageUpload').files;
+    const title = document.getElementById('imageTitle').value.trim();
+    
+    if (files.length === 0) {
+      alert('Chagua picha kwanza King 👑');
+      return;
+    }
+
+    document.getElementById('uploadBtn').innerText = 'UPLOADING... ⏳';
+    document.getElementById('uploadBtn').disabled = true;
+    document.getElementById('statusMsg').innerText = `Uploading ${files.length} images...`;
+
+    let uploadPromises = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const timestamp = Date.now();
+      const fileName = `gallery/${timestamp}_${file.name}`;
+      const storageRef = storage.ref(fileName);
+      
+      const uploadTask = storageRef.put(file).then(snapshot => {
+        return snapshot.ref.getDownloadURL();
+      }).then(url => {
+        const imageData = {
+          url: url,
+          title: title || file.name,
+          fileName: file.name,
+          timestamp: firebase.database.ServerValue.TIMESTAMP,
+          uploadedBy: 'King Io Akai'
+        };
+        return db.ref('gallery/' + timestamp).set(imageData);
+      });
+      
+      uploadPromises.push(uploadTask);
+    }
+
+    Promise.all(uploadPromises).then(() => {
+      document.getElementById('statusMsg').innerText = `Uploaded ${files.length} images successfully! ✅`;
+      document.getElementById('statusMsg').style.color = '#00FF00';
+      document.getElementById('uploadBtn').innerText = '📤 UPLOAD TO EMPIRE VAULT';
+      document.getElementById('uploadBtn').disabled = false;
+      document.getElementById('imageUpload').value = '';
+      document.getElementById('imageTitle').value = '';
+      loadGallery();
+    }).catch(err => {
+      document.getElementById('statusMsg').innerText = 'Upload failed: ' + err.message;
+      document.getElementById('statusMsg').style.color = '#FF0000';
+      document.getElementById('uploadBtn').innerText = '📤 UPLOAD TO EMPIRE VAULT';
+      document.getElementById('uploadBtn').disabled = false;
+    });
+  }
+
+  function loadGallery() {
+    db.ref('gallery').orderByChild('timestamp').on('value', snap => {
+      const galleryGrid = document.getElementById('galleryGrid');
+      galleryGrid.innerHTML = '';
+      let count = 0;
+      
+      snap.forEach(child => {
+        const img = child.val();
+        count++;
+        const item = document.createElement('div');
+        item.className = 'gallery-item';
+        item.innerHTML = `
+          <img src="${img.url}" alt="${img.title}" onclick="window.open('${img.url}', '_blank')">
+          <div class="link-box">
+            <b>${img.title}</b><br>
+            <input type="text" value="${img.url}" readonly style="width:100%; font-size:9px; margin:5px 0; padding:3px;">
+            <button class="copy-btn" onclick="copyLink('${img.url}')">COPY LINK</button>
+          </div>
+        `;
+        galleryGrid.prepend(item);
+      });
+      
+      document.getElementById('imageCount').innerText = count;
+      if (count === 0) {
+        galleryGrid.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color:#B8941F;">No images yet. Upload yako ya kwanza King 👑</p>';
+      }
+    });
+  }
+
+  function copyLink(url) {
+    navigator.clipboard.writeText(url).then(() => {
+      alert('Link copied! 📋 Share na Empire 👑');
+    });
+  }
+</script>
+</body>
+</html>

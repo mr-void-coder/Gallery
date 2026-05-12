@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title> The King  - Royal Gallery</title>
+<title>The King - Royal Gallery</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
@@ -33,7 +33,7 @@
 
 <div class="royal-card">
     <div class="crown-main">👑</div>
-    <h1>KING IO AKAI GALLERY</h1>
+    <h1>THE KING GALLERY</h1>
     <p style="text-align:center; font-size:11px;">ROYAL IMAGE VAULT • EST. 2026</p>
     <div class="stats">Total Images: <span id="imageCount">0</span> 📸</div>
     <div class="status-msg" id="statusMsg">Firebase Storage: CONNECTED ✅</div>
@@ -51,8 +51,6 @@
 </div>
 
 <script>
-  // TUMIA FIREBASE YAKO ILE ILE YA TSE KAMA UNATAKA
-  // AMA CREATE PROJECT MPYA KWA firebase.google.com
   const firebaseConfig = {
     apiKey: "AIzaSyAmXKbyLJmf2IU1hS8RI0uAE5LWgkAvovI",
     authDomain: "single-empire.firebaseapp.com",
@@ -76,7 +74,7 @@
     const title = document.getElementById('imageTitle').value.trim();
     
     if (files.length === 0) {
-      alert('Chagua picha kwanza King 👑');
+      alert('Chagua picha kwanza, The King 👑');
       return;
     }
 
@@ -100,7 +98,7 @@
           title: title || file.name,
           fileName: file.name,
           timestamp: firebase.database.ServerValue.TIMESTAMP,
-          uploadedBy: 'King Io Akai'
+          uploadedBy: 'The King'
         };
         return db.ref('gallery/' + timestamp).set(imageData);
       });
@@ -148,7 +146,7 @@
       
       document.getElementById('imageCount').innerText = count;
       if (count === 0) {
-        galleryGrid.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color:#B8941F;">No images yet. Upload yako ya kwanza King 👑</p>';
+        galleryGrid.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color:#B8941F;">No images yet. Upload yako ya kwanza, The King 👑</p>';
       }
     });
   }
